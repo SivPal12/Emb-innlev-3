@@ -80,7 +80,7 @@ int printCounter() {
 
 // Used by printCounter
 void repaintCounter(int pos, uint16_t color) {
-  tft.setCursor(counterOffsetX + 3*6*(pos+1), counterOffsetY);
+  tft.setCursor(counterOffsetX + counterTextSize*6*(pos+1), counterOffsetY);
   tft.setTextColor(color);
   tft.print(counterOnScreen[pos]);
 }
