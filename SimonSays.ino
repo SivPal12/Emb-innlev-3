@@ -17,6 +17,13 @@ Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS,  TFT_DC, TFT_RST);
 #define TFT_SCLK 13
 #define TFT_MOSI 11
 
+// Configs
+const unsigned int counterTextSize = 3;
+const unsigned int headerTextSize = 2;
+const unsigned int counterOffsetX = 0;
+const unsigned int counterOffsetY = headerTextSize*7 + counterTextSize;
+
+
 uint16_t commandStartTime;
 uint16_t timeToCompleteCommand = 20;
 
@@ -50,15 +57,17 @@ void loop() {
    */
 }
 
-int counterYOffset = 3*6;
 char counterBuffer[4] = "   ";
 char counterOnScreen[4] = "   ";
-void printCounter() {
+/* Prints counter/100 to screen using a double buffer
+ * returns time left in milliseconds
+ */
+int printCounter() {
   int timeLeft = (timeToCompleteCommand*1000) - millis() - commandStartTime;
 
   sprintf(counterBuffer, "%3u", timeLeft > 0 ? timeLeft / 100 : 0);
 
-  tft.setTextSize(3);
+  tft.setTextSize(counterTextSize);
   for (int i = 0 ; i < 3; i++) {
     if (counterBuffer[i] != counterOnScreen[i]) {
       repaintCounter(i, ST7735_BLACK);
@@ -66,10 +75,12 @@ void printCounter() {
       repaintCounter(i, ST7735_WHITE);
     }
   }
+  return timeLeft;
 }
 
+// Used by printCounter
 void repaintCounter(int pos, uint16_t color) {
-  tft.setCursor(3*6*(pos+1), counterYOffset);
+  tft.setCursor(counterOffsetX + 3*6*(pos+1), counterOffsetY);
   tft.setTextColor(color);
   tft.print(counterOnScreen[pos]);
 }
@@ -82,7 +93,7 @@ void initScreen() {
 }
 
 void printHeader() {
-  tft.setTextSize(2);
+  tft.setTextSize(headerTextSize);
   tft.setCursor(0, 0);
   tft.setTextColor(ST7735_WHITE);
   //  tft.setTextWrap(true);
