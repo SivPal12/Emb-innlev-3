@@ -17,7 +17,9 @@ Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS,  TFT_DC, TFT_RST);
 #define TFT_SCLK 13
 #define TFT_MOSI 11
 
-// Configs
+// Config pins
+const int tiltPin = 3;
+// Config screen
 const unsigned int counterTextSize = 3;
 const unsigned int headerTextSize = 2;
 const unsigned int commandTextSize = 2;
@@ -28,20 +30,28 @@ const unsigned int commandOffsetX = 0;
 const unsigned int commandOffsetY = counterOffsetY + counterTextSize*7 + commandTextSize;
 
 uint16_t commandStartTime;
-uint16_t timeToCompleteCommand = 0;
+uint16_t timeToCompleteCommand = 20*1000; // Initial time to complete a command (millis)
 const char *pCurrentCommand;
-const char *pPrevCommand;
+unsigned int totalNumberOfTasks = 1;
+unsigned int currentTask = totalNumberOfTasks + 1;
 
 void setup(void) {
   Serial.begin(9600);
 
+  randomSeed(analogRead(0));
   tft.initR(INITR_BLACKTAB);   // Denne funket best
+  newTask();
+
   initScreen();
 }
 
 void loop() {
   printCounter(); // If < 0 do end game
   printCommand();
+
+  if (taskComplete()) {
+    newTask();
+  }
 }
 
 char counterBuffer[4];
@@ -50,7 +60,7 @@ char counterOnScreen[4];
  * returns time left in milliseconds
  */
 int printCounter() {
-  int timeLeft = (timeToCompleteCommand*1000) - (millis() - commandStartTime);
+  int timeLeft = (timeToCompleteCommand) - (millis() - commandStartTime);
 
   sprintf(counterBuffer, "%3u", timeLeft > 0 ? timeLeft / 100 : 0);
 
@@ -87,7 +97,7 @@ void printHeader() {
   tft.print("Simon says:");
 }
 
-
+const char *pPrevCommand;
 void printCommand() {
   if (pPrevCommand != pCurrentCommand) {
     tft.setTextSize(commandTextSize);
@@ -104,5 +114,53 @@ void repaintCommand(uint16_t color) {
   tft.setCursor(commandOffsetX, commandOffsetY);
   tft.setTextColor(color);
   tft.print(pPrevCommand);
+}
+
+/*
+ * Inits a new task
+ */
+void newTask() {
+  int nextTask;
+  //  do {
+  nextTask = random(totalNumberOfTasks);
+  //  }
+  //  while (nextTask == currentTask);
+
+  setCommand(nextTask);
+  currentTask = nextTask;
+  commandStartTime = millis();
+}
+
+// Tasks config
+void setCommand(int commandNumber) {
+  switch (commandNumber) {
+  case 0:
+    pCurrentCommand = "Flip it!";
+    break;
+  default:
+    pCurrentCommand = "Command not implemented";
+    break;
+  }
+}
+
+bool taskComplete() {
+  switch (currentTask) {
+  case 0:
+    return tiltComplete();
+    break;
+  }
+  return false;
+}
+
+int prevShake = LOW;
+bool tiltComplete() {
+  bool result = false;
+
+  int currentShake = digitalRead(tiltPin);
+  if (prevShake == HIGH && currentShake == LOW) {
+    result = true;
+  }
+  prevShake = currentShake;
+  return result;
 }
 
