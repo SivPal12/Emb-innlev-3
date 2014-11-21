@@ -20,27 +20,34 @@ Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS,  TFT_DC, TFT_RST);
 // Configs
 const unsigned int counterTextSize = 3;
 const unsigned int headerTextSize = 2;
+const unsigned int commandTextSize = 2;
+
 const unsigned int counterOffsetX = 0;
 const unsigned int counterOffsetY = headerTextSize*7 + counterTextSize;
-
+const unsigned int commandOffsetX = 0;
+const unsigned int commandOffsetY = counterOffsetY + counterTextSize*7 + commandTextSize;
 
 uint16_t commandStartTime;
-uint16_t timeToCompleteCommand = 20;
+uint16_t timeToCompleteCommand = 0;
+char *pCurrentCommand = "Lorem ipsum dolor sit amet";
 
 void setup(void) {
   Serial.begin(9600);
-
-  commandStartTime = millis();
 
   tft.initR(INITR_BLACKTAB);   // Denne funket best
   initScreen();
 
   //  time = millis() - time;
   //  Serial.println(time, DEC);
+
+  timeToCompleteCommand = 20;
+
+  commandStartTime = millis();
 }
 
 void loop() {
-  printCounter();
+  printCounter(); // If < 0 do end game
+  printCommand();
 
   /*
   tft.fillScreen(ST7735_BLACK);
@@ -63,7 +70,7 @@ char counterOnScreen[4];
  * returns time left in milliseconds
  */
 int printCounter() {
-  int timeLeft = (timeToCompleteCommand*1000) - millis() - commandStartTime;
+  int timeLeft = (timeToCompleteCommand*1000) - (millis() - commandStartTime);
 
   sprintf(counterBuffer, "%3u", timeLeft > 0 ? timeLeft / 100 : 0);
 
@@ -98,6 +105,14 @@ void printHeader() {
   tft.setTextColor(ST7735_WHITE);
   //  tft.setTextWrap(true);
   tft.print("Simon says:");
+}
+
+void printCommand() {
+  tft.setTextSize(commandTextSize);
+  tft.setCursor(commandOffsetX, commandOffsetY);
+  tft.setTextColor(ST7735_WHITE);
+  tft.setTextWrap(true);
+  tft.print(pCurrentCommand);
 }
 
 void testlines(uint16_t color) {
@@ -280,11 +295,4 @@ void mediabuttons() {
   // play color
   tft.fillTriangle(42, 20, 42, 60, 90, 40, ST7735_GREEN);
 }
-
-
-
-
-
-
-
 
