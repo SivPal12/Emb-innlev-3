@@ -29,7 +29,8 @@ const unsigned int commandOffsetY = counterOffsetY + counterTextSize*7 + command
 
 uint16_t commandStartTime;
 uint16_t timeToCompleteCommand = 0;
-char *pCurrentCommand = "Lorem ipsum dolor sit amet";
+const char *pCurrentCommand;
+const char *pPrevCommand;
 
 void setup(void) {
   Serial.begin(9600);
@@ -107,12 +108,23 @@ void printHeader() {
   tft.print("Simon says:");
 }
 
+
 void printCommand() {
-  tft.setTextSize(commandTextSize);
+  if (pPrevCommand != pCurrentCommand) {
+    tft.setTextSize(commandTextSize);
+    tft.setTextWrap(true);
+
+    repaintCommand(ST7735_BLACK);
+    pPrevCommand = pCurrentCommand;
+    repaintCommand(ST7735_WHITE);
+  }
+}
+
+// Used by printCommand
+void repaintCommand(uint16_t color) {
   tft.setCursor(commandOffsetX, commandOffsetY);
-  tft.setTextColor(ST7735_WHITE);
-  tft.setTextWrap(true);
-  tft.print(pCurrentCommand);
+  tft.setTextColor(color);
+  tft.print(pPrevCommand);
 }
 
 void testlines(uint16_t color) {
