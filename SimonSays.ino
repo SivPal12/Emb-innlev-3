@@ -57,8 +57,8 @@ void loop() {
    */
 }
 
-char counterBuffer[4] = "   ";
-char counterOnScreen[4] = "   ";
+char counterBuffer[4];
+char counterOnScreen[4];
 /* Prints counter/100 to screen using a double buffer
  * returns time left in milliseconds
  */
@@ -80,7 +80,7 @@ int printCounter() {
 
 // Used by printCounter
 void repaintCounter(int pos, uint16_t color) {
-  tft.setCursor(counterOffsetX + counterTextSize*6*(pos+1), counterOffsetY);
+  tft.setCursor(counterOffsetX + counterTextSize*6*(pos), counterOffsetY);
   tft.setTextColor(color);
   tft.print(counterOnScreen[pos]);
 }
