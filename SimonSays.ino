@@ -21,6 +21,7 @@ Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS,  TFT_DC, TFT_RST);
 // Config pins
 const int tiltPin = 3;
 const int pushPin = 2;
+const int joystickXPin = A4;
 
 // Config screen
 const uint16_t backgroundColor = ST7735_BLACK;
@@ -40,9 +41,9 @@ const unsigned int gameOverOffsetY = 0;
 unsigned long commandStartTime;
 unsigned long timeToCompleteCommand = 20*1000; // Initial time to complete a command (millis)
 const char *pCurrentCommand;
-unsigned int totalNumberOfTasks = 2;
+unsigned int totalNumberOfTasks = 4;
 unsigned int currentTask = totalNumberOfTasks + 1;
-char *gameOverString = "GAME OVER!\nFinalScore:\n%u";
+char *gameOverString = "GAME OVER!\nFinal Score:\n%u";
 char *finalGameOverString = (char *) malloc(sizeof(unsigned int) + sizeof(gameOverString));
 unsigned int score = 0;
 
@@ -177,6 +178,12 @@ void setCommand(int commandNumber) {
   case 1:
     pCurrentCommand = "Push it!";
     break;
+  case 2:
+    pCurrentCommand = "Push up!";
+    break;
+  case 3:
+    pCurrentCommand = "Push down!";
+    break;
   default:
     pCurrentCommand = "Command not implemented";
     break;
@@ -190,6 +197,12 @@ bool taskComplete() {
     break;
   case 1:
     return pushComplete();
+    break;
+  case 2:
+    return pushUpComplete();
+    break;
+  case 3:
+    return pushDownComplete();
     break;
   }
   return false;
@@ -228,4 +241,12 @@ bool pushComplete() {
     pushState1 = currentState;
   }
   return false;
+}
+
+bool pushUpComplete() {
+  return analogRead(joystickXPin) >= 800;
+}
+
+bool pushDownComplete() {
+  return analogRead(joystickXPin) <= 200;
 }
