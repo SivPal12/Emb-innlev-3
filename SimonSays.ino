@@ -19,6 +19,8 @@ Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS,  TFT_DC, TFT_RST);
 
 // Config pins
 const int tiltPin = 3;
+const int pushPin = 2;
+
 // Config screen
 const unsigned int counterTextSize = 3;
 const unsigned int headerTextSize = 2;
@@ -32,11 +34,15 @@ const unsigned int commandOffsetY = counterOffsetY + counterTextSize*7 + command
 uint16_t commandStartTime;
 uint16_t timeToCompleteCommand = 20*1000; // Initial time to complete a command (millis)
 const char *pCurrentCommand;
-unsigned int totalNumberOfTasks = 1;
+unsigned int totalNumberOfTasks = 2;
 unsigned int currentTask = totalNumberOfTasks + 1;
 
 void setup(void) {
   Serial.begin(9600);
+
+  // Pin modes
+  pinMode(tiltPin, INPUT);
+  pinMode(pushPin, INPUT);
 
   randomSeed(analogRead(0));
   tft.initR(INITR_BLACKTAB);   // Denne funket best
@@ -121,10 +127,10 @@ void repaintCommand(uint16_t color) {
  */
 void newTask() {
   int nextTask;
-  //  do {
-  nextTask = random(totalNumberOfTasks);
-  //  }
-  //  while (nextTask == currentTask);
+  do {
+    nextTask = random(totalNumberOfTasks);
+  }
+  while (nextTask == currentTask);
 
   setCommand(nextTask);
   currentTask = nextTask;
@@ -137,6 +143,9 @@ void setCommand(int commandNumber) {
   case 0:
     pCurrentCommand = "Flip it!";
     break;
+  case 1:
+    pCurrentCommand = "Push it!";
+    break;
   default:
     pCurrentCommand = "Command not implemented";
     break;
@@ -147,6 +156,9 @@ bool taskComplete() {
   switch (currentTask) {
   case 0:
     return tiltComplete();
+    break;
+  case 1:
+    return pushComplete();
     break;
   }
   return false;
@@ -164,3 +176,23 @@ bool tiltComplete() {
   return result;
 }
 
+int pushState1 = LOW, pushState2 = HIGH;
+// Checks for a complete push of joystick button (HIGH -> LOW -> HIGH)
+bool pushComplete() {
+  int currentState = digitalRead(pushPin);
+
+  if (pushState1 == HIGH) {
+    if (pushState2 == LOW) {
+      if (currentState == HIGH) {
+        pushState1 = LOW;
+        pushState2 = HIGH;
+        return true;
+      }
+    } else {
+      pushState2 = currentState;
+    }
+  } else {
+    pushState1 = currentState;
+  }
+  return false;
+}
