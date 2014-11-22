@@ -23,14 +23,19 @@ const int tiltPin = 3;
 const int pushPin = 2;
 
 // Config screen
+const uint16_t backgroundColor = ST7735_BLACK;
+
 const unsigned int counterTextSize = 3;
 const unsigned int headerTextSize = 2;
 const unsigned int commandTextSize = 2;
+const unsigned int gameOverTextSize = 2;
 
 const unsigned int counterOffsetX = 0;
 const unsigned int counterOffsetY = headerTextSize*7 + counterTextSize;
 const unsigned int commandOffsetX = 0;
 const unsigned int commandOffsetY = counterOffsetY + counterTextSize*7 + commandTextSize;
+const unsigned int gameOverOffsetX = 0;
+const unsigned int gameOverOffsetY = 0;
 
 unsigned long commandStartTime;
 unsigned long timeToCompleteCommand = 20*1000; // Initial time to complete a command (millis)
@@ -102,7 +107,7 @@ void repaintCounter(int pos, uint16_t color) {
 
 // Initializes screen. Should be used with rotation of screen
 void initScreen() {
-  tft.fillScreen(ST7735_BLACK);
+  tft.fillScreen(backgroundColor);
   tft.setRotation(3);
   printHeader();
 }
@@ -121,7 +126,7 @@ void printCommand() {
     tft.setTextSize(commandTextSize);
     tft.setTextWrap(true);
 
-    repaintCommand(ST7735_BLACK);
+    repaintCommand(backgroundColor);
     pPrevCommand = pCurrentCommand;
     repaintCommand(ST7735_WHITE);
   }
@@ -153,9 +158,12 @@ void newTask() {
 bool gameOverLogicComplete = false;
 void doGameOverLogic() {
   if (!gameOverLogicComplete) {
+    tft.fillScreen(backgroundColor);
+    tft.setTextSize(gameOverTextSize);
     sprintf(finalGameOverString, gameOverString, score);
-    pCurrentCommand = (const char *)finalGameOverString;
-    printCommand();
+    tft.setCursor(gameOverOffsetX,gameOverOffsetY);
+    tft.print(finalGameOverString);
+
     gameOverLogicComplete = true;
   }
 }
