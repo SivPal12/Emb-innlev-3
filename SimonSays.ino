@@ -7,6 +7,7 @@
 #include <Adafruit_ST7735.h> // Hardware-specific library
 #include <SPI.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define TFT_CS     10
 #define TFT_RST    8
@@ -31,11 +32,14 @@ const unsigned int counterOffsetY = headerTextSize*7 + counterTextSize;
 const unsigned int commandOffsetX = 0;
 const unsigned int commandOffsetY = counterOffsetY + counterTextSize*7 + commandTextSize;
 
-uint16_t commandStartTime;
-uint16_t timeToCompleteCommand = 20*1000; // Initial time to complete a command (millis)
+unsigned long commandStartTime;
+unsigned long timeToCompleteCommand = 20*1000; // Initial time to complete a command (millis)
 const char *pCurrentCommand;
 unsigned int totalNumberOfTasks = 2;
 unsigned int currentTask = totalNumberOfTasks + 1;
+char *gameOverString = "GAME OVER!\nFinalScore:\n%u";
+char *finalGameOverString = (char *) malloc(sizeof(unsigned int) + sizeof(gameOverString));
+unsigned int score = 0;
 
 void setup(void) {
   Serial.begin(9600);
@@ -51,12 +55,20 @@ void setup(void) {
   initScreen();
 }
 
+bool gameOver = false;
 void loop() {
-  printCounter(); // If < 0 do end game
-  printCommand();
+  if (!gameOver) {
+    gameOver = !printCounter();
 
-  if (taskComplete()) {
-    newTask();
+    if (taskComplete()) {
+      score++;
+      newTask();
+    }
+
+    printCommand();
+  }
+  else {
+    doGameOverLogic();
   }
 }
 
@@ -65,8 +77,8 @@ char counterOnScreen[4];
 /* Prints counter/100 to screen using a double buffer
  * returns time left in milliseconds
  */
-int printCounter() {
-  int timeLeft = (timeToCompleteCommand) - (millis() - commandStartTime);
+unsigned long printCounter() {
+  unsigned long timeLeft = (timeToCompleteCommand) - (millis() - commandStartTime);
 
   sprintf(counterBuffer, "%3u", timeLeft > 0 ? timeLeft / 100 : 0);
 
@@ -123,7 +135,7 @@ void repaintCommand(uint16_t color) {
 }
 
 /*
- * Inits a new task
+ * Inits a new task, changes command on screen and resets command counter
  */
 void newTask() {
   int nextTask;
@@ -135,6 +147,17 @@ void newTask() {
   setCommand(nextTask);
   currentTask = nextTask;
   commandStartTime = millis();
+}
+
+// Game over logic
+bool gameOverLogicComplete = false;
+void doGameOverLogic() {
+  if (!gameOverLogicComplete) {
+    sprintf(finalGameOverString, gameOverString, score);
+    pCurrentCommand = (const char *)finalGameOverString;
+    printCommand();
+    gameOverLogicComplete = true;
+  }
 }
 
 // Tasks config
@@ -188,10 +211,12 @@ bool pushComplete() {
         pushState2 = HIGH;
         return true;
       }
-    } else {
+    }
+    else {
       pushState2 = currentState;
     }
-  } else {
+  }
+  else {
     pushState1 = currentState;
   }
   return false;
