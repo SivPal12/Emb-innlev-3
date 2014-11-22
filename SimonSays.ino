@@ -1,6 +1,9 @@
 /*
  * Based on Adafruit Graphictest lib:
  * https://github.com/adafruit/Adafruit-ST7735-Library/tree/master/examples/graphicstest
+ * SD card interaction based on SD -> Files sketch
+ * Application expects SD card to be write/readable
+ * and not contain a file named highscoreFileName(see variable)
  */
 
 #include <Adafruit_GFX.h>    // Core graphics library
@@ -8,10 +11,13 @@
 #include <SPI.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <SD.h>
 
-#define TFT_CS     10
+#define TFT_CS    10
 #define TFT_RST    8
 #define TFT_DC     9
+
+#define SD_CS      4
 
 Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS,  TFT_DC, TFT_RST);
 
@@ -39,20 +45,27 @@ const unsigned int gameOverOffsetX = 0;
 const unsigned int gameOverOffsetY = 0;
 
 unsigned long commandStartTime;
-unsigned long timeToCompleteCommand = 20*1000; // Initial time to complete a command (millis)
+unsigned long timeToCompleteCommand = 4*1000; // Initial time to complete a command (millis)
 const char *pCurrentCommand;
 unsigned int totalNumberOfTasks = 4;
 unsigned int currentTask = totalNumberOfTasks + 1;
 char *gameOverString = "GAME OVER!\nFinal Score:\n%u";
 char *finalGameOverString = (char *) malloc(sizeof(unsigned int) + sizeof(gameOverString));
 unsigned int score = 0;
+// Quote "Arduino sd card notes": FAT file systems have a limitation when it comes to naming conventions. You must use the 8.3 format, so that file names look like “NAME001.EXT”, where “NAME001” is an 8 character or fewer string, and “EXT” is a 3 character extension. People commonly use the extensions .TXT and .LOG. It is possible to have a shorter file name (for example, mydata.txt, or time.log), but you cannot use longer file names.
+// Took me only one hour to figure that out.
+char *highscoreFileName = "topscore.txt";
 
 void setup(void) {
   Serial.begin(9600);
 
+  SD.begin(SD_CS);
+
   // Pin modes
   pinMode(tiltPin, INPUT);
   pinMode(pushPin, INPUT);
+  pinMode(joystickXPin, INPUT);
+  pinMode(TFT_CS, OUTPUT);
 
   randomSeed(analogRead(0));
   tft.initR(INITR_BLACKTAB);   // Denne funket best
@@ -165,8 +178,48 @@ void doGameOverLogic() {
     tft.setCursor(gameOverOffsetX,gameOverOffsetY);
     tft.print(finalGameOverString);
 
+    tft.print(getHighScore());
+
     gameOverLogicComplete = true;
   }
+}
+
+unsigned int getHighScore() {
+  if (!SD.exists(highscoreFileName)) {
+    Serial.println("File not found!");
+    return 0;
+  }
+  File highscoreFile = SD.open(highscoreFileName, FILE_READ);
+  unsigned int highscore = 0;
+  for (int i = 0; i < sizeof(int); i++) {
+    highscore = highscore << 8;
+    highscore += highscoreFile.read();
+  }
+  highscoreFile.close();
+  Serial.print("Highscore from file: ");
+  Serial.println(highscore);
+
+  return highscore;
+}
+
+void setHighscore(uint16_t newHighscore) {
+  if (SD.exists(highscoreFileName)) {
+    SD.remove(highscoreFileName);
+    Serial.println("File removed");
+  }
+  File highscoreFile = SD.open(highscoreFileName, FILE_WRITE);
+  if (!highscoreFile) {
+    Serial.print("Could not create file: ");
+    Serial.println(highscoreFileName);
+  }
+  // Split int to two bytes
+  byte b1 = newHighscore >> 8;
+  byte b2 = newHighscore;
+  highscoreFile.write(b1);
+  highscoreFile.write(b2);
+  highscoreFile.close();
+  Serial.print("Set new highscore: ");
+  Serial.println(newHighscore);
 }
 
 // Tasks config
