@@ -36,16 +36,21 @@ const unsigned int counterTextSize = 3;
 const unsigned int headerTextSize = 2;
 const unsigned int commandTextSize = 2;
 const unsigned int gameOverTextSize = 2;
+const unsigned int simonSaysTextSize = 2;
 
 const unsigned int counterOffsetX = 0;
-const unsigned int counterOffsetY = headerTextSize*7 + counterTextSize;
+const unsigned int counterOffsetY = 0;
+const unsigned int simonSaysOffsetX = 0;
+const unsigned int simonSaysOffsetY = counterTextSize*8 + simonSaysTextSize;
 const unsigned int commandOffsetX = 0;
-const unsigned int commandOffsetY = counterOffsetY + counterTextSize*7 + commandTextSize;
+const unsigned int commandOffsetY = simonSaysOffsetY + simonSaysTextSize*8 + commandTextSize;
 const unsigned int gameOverOffsetX = 0;
 const unsigned int gameOverOffsetY = 0;
-const unsigned int simonSaysOffsetX = 0;
-const unsigned int simonSaysOffsetY = 0;
 
+// Game config
+const int chanceOfNotSimonSays = 5; // One in n
+
+// Variables
 unsigned long commandStartTime;
 unsigned long timeToCompleteCommand = 4*1000; // Initial time to complete a command (millis)
 const char *pCurrentCommand;
@@ -60,6 +65,7 @@ char *highscoreFileName = "topscore";
 bool gameOver;
 bool gameOverLogicComplete;
 bool simonSays;
+bool prevSimon;
 
 void setup(void) {
   Serial.begin(9600);
@@ -73,7 +79,7 @@ void setup(void) {
   pinMode(TFT_CS, OUTPUT);
 
   randomSeed(analogRead(0));
-  tft.initR(INITR_BLACKTAB);   // Denne funket best
+  tft.initR(INITR_BLACKTAB);
 
   resetGame();
 }
@@ -84,6 +90,7 @@ void resetGame() {
   gameOver = false;
   gameOverLogicComplete = false;
   simonSays = true;
+  prevSimon = false;
   initScreen();
 }
 
@@ -91,7 +98,16 @@ void loop() {
   if (!gameOver) {
     gameOver = !printCounter();
 
-    if (taskComplete()) {
+    if (gameOver && !simonSays) {
+      gameOver = false;
+      score++;
+      newTask();
+    }
+    else if (taskComplete()) {
+      if (!simonSays) {
+        gameOver = true;
+        return;
+      }
       score++;
       newTask();
     }
@@ -137,11 +153,10 @@ void initScreen() {
   tft.setRotation(3);
 }
 
-bool prevSimon = false;
 void printSimonSays() {
   if (prevSimon != simonSays) {
     prevSimon = simonSays;
-    tft.setTextSize(headerTextSize);
+    tft.setTextSize(simonSaysTextSize);
     tft.setCursor(simonSaysOffsetX, simonSaysOffsetY);
     tft.setTextColor(simonSays ? ST7735_WHITE : ST7735_BLACK);
     tft.print("Simon says:");
@@ -177,6 +192,8 @@ void newTask() {
     nextTask = random(totalNumberOfTasks);
   }
   while (nextTask == currentTask);
+
+  simonSays = random(chanceOfNotSimonSays) != 0;
 
   setCommand(nextTask);
   currentTask = nextTask;
