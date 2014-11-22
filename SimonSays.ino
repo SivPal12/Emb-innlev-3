@@ -51,10 +51,12 @@ unsigned int totalNumberOfTasks = 4;
 unsigned int currentTask = totalNumberOfTasks + 1;
 char *gameOverString = "GAME OVER!\nFinal Score:\n%u";
 char *finalGameOverString = (char *) malloc(sizeof(unsigned int) + sizeof(gameOverString));
-unsigned int score = 0;
+unsigned int score;
 // Quote "Arduino sd card notes": FAT file systems have a limitation when it comes to naming conventions. You must use the 8.3 format, so that file names look like “NAME001.EXT”, where “NAME001” is an 8 character or fewer string, and “EXT” is a 3 character extension. People commonly use the extensions .TXT and .LOG. It is possible to have a shorter file name (for example, mydata.txt, or time.log), but you cannot use longer file names.
 // Took me only one hour to figure that out.
-char *highscoreFileName = "topscore.txt";
+char *highscoreFileName = "topscore";
+bool gameOver;
+bool gameOverLogicComplete;
 
 void setup(void) {
   Serial.begin(9600);
@@ -69,12 +71,18 @@ void setup(void) {
 
   randomSeed(analogRead(0));
   tft.initR(INITR_BLACKTAB);   // Denne funket best
-  newTask();
 
+  resetGame();
+}
+
+void resetGame() {
+  newTask();
+  score = 0;
+  gameOver = false;
+  gameOverLogicComplete = false;
   initScreen();
 }
 
-bool gameOver = false;
 void loop() {
   if (!gameOver) {
     gameOver = !printCounter();
@@ -169,18 +177,31 @@ void newTask() {
 }
 
 // Game over logic
-bool gameOverLogicComplete = false;
 void doGameOverLogic() {
   if (!gameOverLogicComplete) {
     tft.fillScreen(backgroundColor);
     tft.setTextSize(gameOverTextSize);
     sprintf(finalGameOverString, gameOverString, score);
     tft.setCursor(gameOverOffsetX,gameOverOffsetY);
-    tft.print(finalGameOverString);
+    tft.println(finalGameOverString);
 
-    tft.print(getHighScore());
+    // Higscore logic
+    uint16_t highscore = getHighScore();
+    //    tft.print("\n");
+    if (score > highscore) {
+      tft.println("New personal best!");
+      setHighscore(score);
+    }
+    else {
+      tft.println("Highscore:");
+      tft.println(getHighScore());
+    }
+    tft.println("Press\njoystick for\nnew game");
 
     gameOverLogicComplete = true;
+  }
+  if (pushComplete()) {
+    resetGame();
   }
 }
 
