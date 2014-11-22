@@ -43,6 +43,8 @@ const unsigned int commandOffsetX = 0;
 const unsigned int commandOffsetY = counterOffsetY + counterTextSize*7 + commandTextSize;
 const unsigned int gameOverOffsetX = 0;
 const unsigned int gameOverOffsetY = 0;
+const unsigned int simonSaysOffsetX = 0;
+const unsigned int simonSaysOffsetY = 0;
 
 unsigned long commandStartTime;
 unsigned long timeToCompleteCommand = 4*1000; // Initial time to complete a command (millis)
@@ -57,6 +59,7 @@ unsigned int score;
 char *highscoreFileName = "topscore";
 bool gameOver;
 bool gameOverLogicComplete;
+bool simonSays;
 
 void setup(void) {
   Serial.begin(9600);
@@ -80,6 +83,7 @@ void resetGame() {
   score = 0;
   gameOver = false;
   gameOverLogicComplete = false;
+  simonSays = true;
   initScreen();
 }
 
@@ -131,19 +135,22 @@ void repaintCounter(int pos, uint16_t color) {
 void initScreen() {
   tft.fillScreen(backgroundColor);
   tft.setRotation(3);
-  printHeader();
 }
 
-void printHeader() {
-  tft.setTextSize(headerTextSize);
-  tft.setCursor(0, 0);
-  tft.setTextColor(ST7735_WHITE);
-  //  tft.setTextWrap(true);
-  tft.print("Simon says:");
+bool prevSimon = false;
+void printSimonSays() {
+  if (prevSimon != simonSays) {
+    prevSimon = simonSays;
+    tft.setTextSize(headerTextSize);
+    tft.setCursor(simonSaysOffsetX, simonSaysOffsetY);
+    tft.setTextColor(simonSays ? ST7735_WHITE : ST7735_BLACK);
+    tft.print("Simon says:");
+  }
 }
 
 const char *pPrevCommand;
 void printCommand() {
+  printSimonSays();
   if (pPrevCommand != pCurrentCommand) {
     tft.setTextSize(commandTextSize);
     tft.setTextWrap(true);
