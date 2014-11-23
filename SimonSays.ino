@@ -73,8 +73,8 @@ bool gameOver;
 bool gameOverLogicComplete;
 bool simonSays;
 // Keep strings lower than 14 chars
-char *simonCommands[] = {"Simon says", "Simon insists"};
-char *simonLies[] = {"Simon lies", "", "Simon sleeps"};
+char *simonCommands[] = {"Simon says"};//, "Simon insists"};
+char *simonLies[] = {"Simon lies", "", "Simon sleeps", "Simon simon"};
 const char *currentSimonSays, *prevSimonSays;
 
 void setup(void) {
