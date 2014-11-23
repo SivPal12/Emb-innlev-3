@@ -72,10 +72,17 @@ char *highscoreFileName = "topscore";
 bool gameOver;
 bool gameOverLogicComplete;
 bool simonSays;
-bool prevSimon;
+// Keep strings lower than 14 chars
+char *simonCommands[] = {"Simon says", "Simon insists"};
+char *simonLies[] = {"Simon lies", "", "Simon sleeps"};
+const char *currentSimonSays, *prevSimonSays;
 
 void setup(void) {
   Serial.begin(9600);
+
+  Serial.println(sizeof(simonCommands) / sizeof( char *));
+
+  Serial.println(sizeof(simonLies) / sizeof( char *));
 
   SD.begin(SD_CS);
 
@@ -96,8 +103,7 @@ void resetGame() {
   score = 0;
   gameOver = false;
   gameOverLogicComplete = false;
-  simonSays = true;
-  prevSimon = false;
+  prevSimonSays = "";
   initScreen();
 }
 
@@ -176,13 +182,19 @@ void initScreen() {
 }
 
 void printSimonSays() {
-  if (prevSimon != simonSays) {
-    prevSimon = simonSays;
+  if (currentSimonSays != prevSimonSays) {
     tft.setTextSize(simonSaysTextSize);
-    tft.setCursor(simonSaysOffsetX, simonSaysOffsetY);
-    tft.setTextColor(simonSays ? ST7735_WHITE : ST7735_BLACK);
-    tft.print("Simon says:");
+    repaintSimonSays(ST7735_BLACK);
+    prevSimonSays = currentSimonSays;
+    repaintSimonSays(ST7735_WHITE);
   }
+}
+
+// Used by printSimonSays
+void repaintSimonSays(uint16_t color) {
+  tft.setCursor(simonSaysOffsetX, simonSaysOffsetY);
+  tft.setTextColor(color);
+  tft.print(prevSimonSays);
 }
 
 const char *pPrevCommand;
@@ -222,6 +234,12 @@ void newTask() {
   while (prevTask == currentTask);
 
   simonSays = random(chanceOfNotSimonSays) != 0;
+
+  if (simonSays) {
+    currentSimonSays = simonCommands[random(sizeof(simonCommands) / sizeof( char *))];
+  } else {
+    currentSimonSays = simonLies[random(sizeof(simonLies) / sizeof( char *))];
+  }
 
   setCommand(currentTask);
   commandStartTime = millis();
