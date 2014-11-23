@@ -54,7 +54,7 @@ const int speedUpEvery = 5; // Speed up game every n score
 const int reduceTimeBy = 20; // Reduce thinking time by n millis
 const int minimumTimeToThink = 500; // Thinking time should not be less than this (millis)
 // Handy for development. Note: At least two tasks have to be enabled!
-const int disabledTasks[] = {0};
+const int disabledTasks[] = {};
 const int simonNotSaysTime = 1000; // Time in millis a non simon says command takes to complete.
 
 // Variables
