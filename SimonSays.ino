@@ -49,10 +49,14 @@ const unsigned int gameOverOffsetY = 0;
 
 // Game config
 const int chanceOfNotSimonSays = 5; // One in n
+const int speedUpEvery = 100; // Speed up game every n score
+const int reduceTimeBy = 10; // Reduce thinking time by n millis
+const int minimumTimeToThink = 200; // Thinking time should not be less than this (millis)
+const int disabledTasks[] = {0}; // Handy for development
 
 // Variables
 unsigned long commandStartTime;
-unsigned long timeToCompleteCommand;
+unsigned long timeToCompleteCommand = 4*1000;
 const char *pCurrentCommand;
 unsigned int totalNumberOfTasks = 4;
 unsigned int currentTask = totalNumberOfTasks + 1;
@@ -91,7 +95,6 @@ void resetGame() {
   gameOverLogicComplete = false;
   simonSays = true;
   prevSimon = false;
-  timeToCompleteCommand = 4*1000;
   initScreen();
 }
 
@@ -122,11 +125,23 @@ void loop() {
 
 char counterBuffer[4];
 char counterOnScreen[4];
-/* Prints counter/100 to screen using a double buffer
+/*
+ * Prints counter/100 to screen using a double buffer
  * returns time left in milliseconds
  */
 unsigned long printCounter() {
-  unsigned long timeLeft = (timeToCompleteCommand) - (millis() - commandStartTime);
+  // Make game go faster and faster and faster and faster
+  unsigned long reducedTime = timeToCompleteCommand - ((score - (score % speedUpEvery)) / speedUpEvery * reduceTimeBy);
+
+  if (!simonSays) {
+    reducedTime /= 2;
+  }
+
+  if (reducedTime < minimumTimeToThink) {
+    reducedTime = minimumTimeToThink;
+  }
+
+  unsigned long timeLeft = reducedTime - (millis() - commandStartTime);
 
   sprintf(counterBuffer, "%3u", timeLeft > 0 ? timeLeft / 100 : 0);
 
@@ -187,21 +202,23 @@ void repaintCommand(uint16_t color) {
 /*
  * Inits a new task, changes command on screen and resets command counter
  */
-unsigned long tmpStoreTime;
 void newTask() {
   int nextTask;
+  // Make sure new task is different from last
   do {
     nextTask = random(totalNumberOfTasks);
+    // Deactivation logic
+    for (int i = 0; i < sizeof(disabledTasks); i++) {
+      if(disabledTasks[i] == nextTask) {
+        nextTask = currentTask;
+        break;
+      }
+    }
   }
   while (nextTask == currentTask);
-  if (!simonSays) {
-    timeToCompleteCommand = tmpStoreTime;
-  }
+
+  // Make 'simon does not say' time half normal time
   simonSays = random(chanceOfNotSimonSays) != 0;
-  if (!simonSays) {
-    tmpStoreTime = timeToCompleteCommand;
-    timeToCompleteCommand /= 2;
-  }
 
   setCommand(nextTask);
   currentTask = nextTask;
