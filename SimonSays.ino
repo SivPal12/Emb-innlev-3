@@ -30,6 +30,7 @@ const int tiltPin = 7;
 const int pushPin = 2;
 const int joystickXPin = A4;
 const int joystickYPin = A5;
+const int buzzerPin = 3;
 
 // Config screen
 const uint16_t backgroundColor = ST7735_BLACK;
@@ -58,6 +59,9 @@ const int minimumTimeToThink = 500; // Thinking time should not be less than thi
 const int disabledTasks[] = {};
 const int simonNotSaysTime = 1000; // Time in millis a non simon says command takes to complete.
 
+const int noteDelay = 50;
+const int toneLength = 80;
+
 // Variables
 unsigned long commandStartTime;
 unsigned long timeToCompleteCommand = 4*1000;
@@ -77,6 +81,9 @@ bool simonSays;
 char *simonCommands[] = {"Simon says"};//, "Simon insists"};
 char *simonLies[] = {"Simon lies", "", "Simon sleeps", "Simon simon"};
 const char *currentSimonSays, *prevSimonSays;
+int melody[] = {NOTE_E3, NOTE_G3, NOTE_E4, NOTE_C4, NOTE_D4, NOTE_G4, NOTE_G4};
+bool playLvlUpSong;
+int currentTone;
 
 void setup(void) {
   SD.begin(SD_CS);
@@ -99,6 +106,7 @@ void resetGame() {
   gameOver = false;
   gameOverLogicComplete = false;
   prevSimonSays = "";
+  resetMelody(false);
   initScreen();
 }
 
@@ -113,6 +121,7 @@ void loop() {
     else if (gameOver && !simonSays) {
       gameOver = false;
       score++;
+      resetMelody(true);
       newTask();
     }
     else if (taskComplete()) {
@@ -121,6 +130,7 @@ void loop() {
         return;
       }
       score++;
+      resetMelody(true);
       newTask();
     }
 
@@ -129,6 +139,27 @@ void loop() {
   else {
     doGameOverLogic();
   }
+  doSound();
+}
+
+int timeLastTone = 0;
+void doSound() {
+  if (playLvlUpSong) {
+    if (currentTone < sizeof(melody) / sizeof(int)) {
+      if (millis() - timeLastTone > noteDelay) {
+        tone(buzzerPin, melody[currentTone++], toneLength);
+        timeLastTone = millis();
+      }
+    } else {
+      resetMelody(false);
+    }
+  }
+}
+
+void resetMelody(bool play) {
+  playLvlUpSong = play;
+  noTone(buzzerPin);
+  currentTone = 0;
 }
 
 char counterBuffer[4];
