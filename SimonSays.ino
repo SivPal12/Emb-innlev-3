@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <SD.h>
+#include "tones.h"
 
 #define TFT_CS    10
 #define TFT_RST    8
