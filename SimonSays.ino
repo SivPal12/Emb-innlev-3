@@ -257,7 +257,7 @@ void doGameOverLogic() {
     }
     else {
       tft.println("Highscore:");
-      tft.println(getHighScore());
+      tft.println(highscore);
     }
     tft.println("Press\njoystick for\nnew game");
 
