@@ -49,10 +49,11 @@ const unsigned int gameOverOffsetY = 0;
 
 // Game config
 const int chanceOfNotSimonSays = 5; // One in n
-const int speedUpEvery = 100; // Speed up game every n score
-const int reduceTimeBy = 10; // Reduce thinking time by n millis
-const int minimumTimeToThink = 200; // Thinking time should not be less than this (millis)
-const int disabledTasks[] = {0}; // Handy for development
+const int speedUpEvery = 5; // Speed up game every n score
+const int reduceTimeBy = 20; // Reduce thinking time by n millis
+const int minimumTimeToThink = 500; // Thinking time should not be less than this (millis)
+const int disabledTasks[] = {0}; // Handy for development. Note: At least two tasks have to be enabled!
+const int simonNotSaysTime = 1000; // Time in millis a non simon says command takes to complete.
 
 // Variables
 unsigned long commandStartTime;
@@ -134,10 +135,9 @@ long printCounter() {
   long reducedTime = timeToCompleteCommand - ((score - (score % speedUpEvery)) / speedUpEvery * reduceTimeBy);
 
   if (!simonSays) {
-    reducedTime /= 2;
+    reducedTime = simonNotSaysTime;
   }
-
-  if (reducedTime < minimumTimeToThink) {
+  else if (reducedTime < minimumTimeToThink) {
     reducedTime = minimumTimeToThink;
   }
 
