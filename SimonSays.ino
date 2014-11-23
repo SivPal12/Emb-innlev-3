@@ -52,7 +52,7 @@ const int chanceOfNotSimonSays = 5; // One in n
 
 // Variables
 unsigned long commandStartTime;
-unsigned long timeToCompleteCommand = 4*1000; // Initial time to complete a command (millis)
+unsigned long timeToCompleteCommand;
 const char *pCurrentCommand;
 unsigned int totalNumberOfTasks = 4;
 unsigned int currentTask = totalNumberOfTasks + 1;
@@ -91,6 +91,7 @@ void resetGame() {
   gameOverLogicComplete = false;
   simonSays = true;
   prevSimon = false;
+  timeToCompleteCommand = 4*1000;
   initScreen();
 }
 
@@ -186,14 +187,21 @@ void repaintCommand(uint16_t color) {
 /*
  * Inits a new task, changes command on screen and resets command counter
  */
+unsigned long tmpStoreTime;
 void newTask() {
   int nextTask;
   do {
     nextTask = random(totalNumberOfTasks);
   }
   while (nextTask == currentTask);
-
+  if (!simonSays) {
+    timeToCompleteCommand = tmpStoreTime;
+  }
   simonSays = random(chanceOfNotSimonSays) != 0;
+  if (!simonSays) {
+    tmpStoreTime = timeToCompleteCommand;
+    timeToCompleteCommand /= 2;
+  }
 
   setCommand(nextTask);
   currentTask = nextTask;
