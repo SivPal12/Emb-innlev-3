@@ -28,6 +28,7 @@ Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS,  TFT_DC, TFT_RST);
 const int tiltPin = 3;
 const int pushPin = 2;
 const int joystickXPin = A4;
+const int joystickYPin = A5;
 
 // Config screen
 const uint16_t backgroundColor = ST7735_BLACK;
@@ -60,7 +61,7 @@ const int simonNotSaysTime = 1000; // Time in millis a non simon says command ta
 unsigned long commandStartTime;
 unsigned long timeToCompleteCommand = 4*1000;
 const char *pCurrentCommand;
-unsigned int totalNumberOfTasks = 4;
+unsigned int totalNumberOfTasks = 6;
 unsigned int currentTask = totalNumberOfTasks + 1;
 char *gameOverString = "GAME OVER!\nFinal Score:\n%u";
 char *finalGameOverString = (char *) malloc(sizeof(unsigned int) + sizeof(gameOverString));
@@ -308,6 +309,12 @@ void setCommand(int commandNumber) {
   case 3:
     pCurrentCommand = "Push down!";
     break;
+  case 4:
+    pCurrentCommand = "Push right!";
+    break;
+  case 5:
+    pCurrentCommand = "Push left!";
+    break;
   default:
     pCurrentCommand = "Command not implemented";
     break;
@@ -332,6 +339,12 @@ bool taskComplete(int task) {
     break;
   case 3:
     return pushDownComplete();
+    break;
+  case 4:
+    return pushRightComplete();
+    break;
+  case 5:
+    return pushLeftComplete();
     break;
   }
   return false;
@@ -404,4 +417,12 @@ bool pushUpComplete() {
 
 bool pushDownComplete() {
   return analogRead(joystickXPin) <= 200;
+}
+
+bool pushRightComplete() {
+  return analogRead(joystickYPin) >= 800;
+}
+
+bool pushLeftComplete() {
+  return analogRead(joystickYPin) <= 200;
 }
