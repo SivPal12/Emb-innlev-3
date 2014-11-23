@@ -100,7 +100,7 @@ void resetGame() {
 
 void loop() {
   if (!gameOver) {
-    gameOver = !printCounter();
+    gameOver = printCounter() <= 0;
 
     if (gameOver && !simonSays) {
       gameOver = false;
@@ -129,9 +129,9 @@ char counterOnScreen[4];
  * Prints counter/100 to screen using a double buffer
  * returns time left in milliseconds
  */
-unsigned long printCounter() {
+long printCounter() {
   // Make game go faster and faster and faster and faster
-  unsigned long reducedTime = timeToCompleteCommand - ((score - (score % speedUpEvery)) / speedUpEvery * reduceTimeBy);
+  long reducedTime = timeToCompleteCommand - ((score - (score % speedUpEvery)) / speedUpEvery * reduceTimeBy);
 
   if (!simonSays) {
     reducedTime /= 2;
@@ -141,7 +141,7 @@ unsigned long printCounter() {
     reducedTime = minimumTimeToThink;
   }
 
-  unsigned long timeLeft = reducedTime - (millis() - commandStartTime);
+  long timeLeft = reducedTime - (millis() - commandStartTime);
 
   sprintf(counterBuffer, "%3u", timeLeft > 0 ? timeLeft / 100 : 0);
 
@@ -217,7 +217,6 @@ void newTask() {
   }
   while (nextTask == currentTask);
 
-  // Make 'simon does not say' time half normal time
   simonSays = random(chanceOfNotSimonSays) != 0;
 
   setCommand(nextTask);
