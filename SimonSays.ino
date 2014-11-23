@@ -78,12 +78,6 @@ char *simonLies[] = {"Simon lies", "", "Simon sleeps"};
 const char *currentSimonSays, *prevSimonSays;
 
 void setup(void) {
-  Serial.begin(9600);
-
-  Serial.println(sizeof(simonCommands) / sizeof( char *));
-
-  Serial.println(sizeof(simonLies) / sizeof( char *));
-
   SD.begin(SD_CS);
 
   // Pin modes
@@ -276,7 +270,6 @@ void doGameOverLogic() {
 
 unsigned int getHighScore() {
   if (!SD.exists(highscoreFileName)) {
-    Serial.println("File not found!");
     return 0;
   }
   File highscoreFile = SD.open(highscoreFileName, FILE_READ);
@@ -286,8 +279,6 @@ unsigned int getHighScore() {
     highscore += highscoreFile.read();
   }
   highscoreFile.close();
-  Serial.print("Highscore from file: ");
-  Serial.println(highscore);
 
   return highscore;
 }
@@ -295,21 +286,14 @@ unsigned int getHighScore() {
 void setHighscore(uint16_t newHighscore) {
   if (SD.exists(highscoreFileName)) {
     SD.remove(highscoreFileName);
-    Serial.println("File removed");
   }
   File highscoreFile = SD.open(highscoreFileName, FILE_WRITE);
-  if (!highscoreFile) {
-    Serial.print("Could not create file: ");
-    Serial.println(highscoreFileName);
-  }
   // Split int to two bytes
   byte b1 = newHighscore >> 8;
   byte b2 = newHighscore;
   highscoreFile.write(b1);
   highscoreFile.write(b2);
   highscoreFile.close();
-  Serial.print("Set new highscore: ");
-  Serial.println(newHighscore);
 }
 
 // Tasks config
