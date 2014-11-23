@@ -26,8 +26,8 @@ Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS,  TFT_DC, TFT_RST);
 #define TFT_MOSI 11
 
 // Config pins
-const int tiltPin = 1;
-const int pushPin = 0;
+const int tiltPin = 7;
+const int pushPin = 2;
 const int joystickXPin = A4;
 const int joystickYPin = A5;
 
