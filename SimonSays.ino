@@ -52,7 +52,8 @@ const int chanceOfNotSimonSays = 5; // One in n
 const int speedUpEvery = 5; // Speed up game every n score
 const int reduceTimeBy = 20; // Reduce thinking time by n millis
 const int minimumTimeToThink = 500; // Thinking time should not be less than this (millis)
-const int disabledTasks[] = {0}; // Handy for development. Note: At least two tasks have to be enabled!
+// Handy for development. Note: At least two tasks have to be enabled!
+const int disabledTasks[] = {0};
 const int simonNotSaysTime = 1000; // Time in millis a non simon says command takes to complete.
 
 // Variables
@@ -103,7 +104,11 @@ void loop() {
   if (!gameOver) {
     gameOver = printCounter() <= 0;
 
-    if (gameOver && !simonSays) {
+    if (wrongTaskComplete()) {
+      gameOver = true;
+      return;
+    }
+    else if (gameOver && !simonSays) {
       gameOver = false;
       score++;
       newTask();
@@ -202,25 +207,22 @@ void repaintCommand(uint16_t color) {
 /*
  * Inits a new task, changes command on screen and resets command counter
  */
+int prevTask;
 void newTask() {
-  int nextTask;
+  prevTask = currentTask;
   // Make sure new task is different from last
   do {
-    nextTask = random(totalNumberOfTasks);
+    currentTask = random(totalNumberOfTasks);
     // Deactivation logic
-    for (int i = 0; i < sizeof(disabledTasks); i++) {
-      if(disabledTasks[i] == nextTask) {
-        nextTask = currentTask;
-        break;
-      }
+    if (isTaskDisabled(currentTask)) {
+      currentTask = prevTask;
     }
   }
-  while (nextTask == currentTask);
+  while (prevTask == currentTask);
 
   simonSays = random(chanceOfNotSimonSays) != 0;
 
-  setCommand(nextTask);
-  currentTask = nextTask;
+  setCommand(currentTask);
   commandStartTime = millis();
 }
 
@@ -313,7 +315,12 @@ void setCommand(int commandNumber) {
 }
 
 bool taskComplete() {
-  switch (currentTask) {
+  return taskComplete(currentTask);
+}
+
+bool taskComplete(int task) {
+
+  switch (task) {
   case 0:
     return tiltComplete();
     break;
@@ -326,6 +333,32 @@ bool taskComplete() {
   case 3:
     return pushDownComplete();
     break;
+  }
+  return false;
+}
+
+/*
+ * Checks if task is complete.
+ * Ignores previous task
+ */
+bool wrongTaskComplete() {
+  for (int i = 0; i < totalNumberOfTasks; i++) {
+    if (i != currentTask && i != prevTask) {
+      if (!isTaskDisabled(i)) {
+        if (taskComplete(i)) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+bool isTaskDisabled(int taskNum) {
+  for (int i = 0; i < sizeof(disabledTasks); i++) {
+    if(disabledTasks[i] == taskNum) {
+      return true;
+    }
   }
   return false;
 }
