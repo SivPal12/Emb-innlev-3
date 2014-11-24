@@ -65,7 +65,7 @@ const int toneLength = 80;
 
 // Variables
 unsigned long commandStartTime;
-unsigned long timeToCompleteCommand = 4*1000;
+unsigned long timeToCompleteCommand = 1500;
 const char *pCurrentCommand;
 unsigned int totalNumberOfTasks = 6;
 unsigned int currentTask = totalNumberOfTasks + 1;
