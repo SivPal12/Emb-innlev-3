@@ -56,7 +56,9 @@ const int speedUpEvery = 5; // Speed up game every n score
 const int reduceTimeBy = 20; // Reduce thinking time by n millis
 const int minimumTimeToThink = 500; // Thinking time should not be less than this (millis)
 // Handy for development. Note: At least two tasks have to be enabled!
-const int disabledTasks[] = {};
+const int disabledTasks[] = {
+  0
+};
 const int simonNotSaysTime = 1000; // Time in millis a non simon says command takes to complete.
 
 const int noteDelay = 50;
@@ -78,10 +80,16 @@ bool gameOver;
 bool gameOverLogicComplete;
 bool simonSays;
 // Keep strings lower than 14 chars
-char *simonCommands[] = {"Simon says"};//, "Simon insists"};
-char *simonLies[] = {"Simon lies", "", "Simon sleeps", "Simon simon"};
+char *simonCommands[] = {
+  "Simon says"
+};//, "Simon insists"};
+char *simonLies[] = {
+  "Simon lies", "", "Simon sleeps", "Simon simon"
+};
 const char *currentSimonSays, *prevSimonSays;
-int melody[] = {NOTE_E3, NOTE_G3, NOTE_E4, NOTE_C4, NOTE_D4, NOTE_G4, NOTE_G4};
+int melody[] = {
+  NOTE_E3, NOTE_G3, NOTE_E4, NOTE_C4, NOTE_D4, NOTE_G4, NOTE_G4
+};
 int currentTone;
 
 void setup(void) {
