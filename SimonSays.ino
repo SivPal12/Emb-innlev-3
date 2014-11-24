@@ -90,6 +90,9 @@ int melody[] = {
   NOTE_E3, NOTE_G3, NOTE_E4, NOTE_C4, NOTE_D4, NOTE_G4, NOTE_G4
 };
 int currentTone;
+int gameOverMelody[] = {
+  NOTE_E2, NOTE_E2, NOTE_E2
+};
 
 void setup(void) {
   SD.begin(SD_CS);
@@ -301,10 +304,19 @@ void doGameOverLogic() {
     }
     tft.println("Press\njoystick for\nnew game");
 
+    playGameOverSound();
+
     gameOverLogicComplete = true;
   }
   if (pushComplete()) {
     resetGame();
+  }
+}
+
+void playGameOverSound() {
+  for (int currentNote = 0; currentNote < sizeof(gameOverMelody)/sizeof(gameOverMelody[0]); currentNote++) {
+    tone(buzzerPin, gameOverMelody[currentNote], 120);
+    delay(170);
   }
 }
 
