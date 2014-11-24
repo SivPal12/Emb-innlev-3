@@ -82,7 +82,6 @@ char *simonCommands[] = {"Simon says"};//, "Simon insists"};
 char *simonLies[] = {"Simon lies", "", "Simon sleeps", "Simon simon"};
 const char *currentSimonSays, *prevSimonSays;
 int melody[] = {NOTE_E3, NOTE_G3, NOTE_E4, NOTE_C4, NOTE_D4, NOTE_G4, NOTE_G4};
-bool playLvlUpSong;
 int currentTone;
 
 void setup(void) {
@@ -106,7 +105,7 @@ void resetGame() {
   gameOver = false;
   gameOverLogicComplete = false;
   prevSimonSays = "";
-  resetMelody(false);
+  resetMelody();
   initScreen();
 }
 
@@ -121,7 +120,6 @@ void loop() {
     else if (gameOver && !simonSays) {
       gameOver = false;
       score++;
-      resetMelody(true);
       newTask();
     }
     else if (taskComplete()) {
@@ -130,7 +128,6 @@ void loop() {
         return;
       }
       score++;
-      resetMelody(true);
       newTask();
     }
 
@@ -142,24 +139,27 @@ void loop() {
   doSound();
 }
 
-int timeLastTone = 0;
+unsigned long timeLastTone = 0;
+int prevScore = 0;
 void doSound() {
-  if (playLvlUpSong) {
+  if (score > prevScore) {
     if (currentTone < sizeof(melody) / sizeof(int)) {
-      if (millis() - timeLastTone > noteDelay) {
+      if (((unsigned long) millis()) - timeLastTone > noteDelay) {
         tone(buzzerPin, melody[currentTone++], toneLength);
-        timeLastTone = millis();
+        timeLastTone = (unsigned long) millis();
       }
-    } else {
-      resetMelody(false);
+    } 
+    else {
+      resetMelody();
     }
   }
 }
 
-void resetMelody(bool play) {
-  playLvlUpSong = play;
+void resetMelody() {
   noTone(buzzerPin);
   currentTone = 0;
+  timeLastTone = 0;
+  prevScore = score;
 }
 
 char counterBuffer[4];
@@ -170,7 +170,7 @@ char counterOnScreen[4];
  */
 long printCounter() {
   // Make game go faster and faster and faster and faster
-  long reducedTime = timeToCompleteCommand - ((score - (score % speedUpEvery)) / speedUpEvery * reduceTimeBy);
+  unsigned long reducedTime = timeToCompleteCommand - ((score - (score % speedUpEvery)) / speedUpEvery * reduceTimeBy);
 
   if (!simonSays) {
     reducedTime = simonNotSaysTime;
@@ -179,7 +179,7 @@ long printCounter() {
     reducedTime = minimumTimeToThink;
   }
 
-  long timeLeft = reducedTime - (millis() - commandStartTime);
+  long timeLeft = reducedTime - (((unsigned long) millis()) - commandStartTime);
 
   sprintf(counterBuffer, "%3u", timeLeft > 0 ? timeLeft / 100 : 0);
 
@@ -263,12 +263,13 @@ void newTask() {
 
   if (simonSays) {
     currentSimonSays = simonCommands[random(sizeof(simonCommands) / sizeof( char *))];
-  } else {
+  } 
+  else {
     currentSimonSays = simonLies[random(sizeof(simonLies) / sizeof( char *))];
   }
 
   setCommand(currentTask);
-  commandStartTime = millis();
+  commandStartTime = (unsigned long) millis();
 }
 
 // Game over logic
