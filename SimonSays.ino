@@ -34,6 +34,8 @@ const int buzzerPin = 3;
 const int shiftDataPin = 1;
 const int shiftClockPin = 5;
 const int shiftSavePin = 0;
+const int brightnessPin = A3;
+const int backlightPin = 6;
 
 // Config screen
 const uint16_t backgroundColor = ST7735_BLACK;
@@ -97,6 +99,7 @@ int currentTone;
 int gameOverMelody[] = {
   NOTE_E2, NOTE_E2, NOTE_E2
 };
+int lastBrightnessRead = analogRead(brightnessPin) + 500;
 
 void setup(void) {
   SD.begin(SD_CS);
@@ -109,6 +112,7 @@ void setup(void) {
   pinMode(shiftDataPin, OUTPUT);
   pinMode(shiftClockPin, OUTPUT);
   pinMode(shiftSavePin, OUTPUT);
+  pinMode(brightnessPin, INPUT);
 
   randomSeed(analogRead(0));
   tft.initR(INITR_BLACKTAB);
@@ -158,6 +162,11 @@ void loop() {
     doGameOverLogic();
   }
   doSound();
+  int currentBrightnessRead = analogRead(brightnessPin);
+  if (abs(lastBrightnessRead - currentBrightnessRead) > 10) {
+    analogWrite(backlightPin, (255.0/1023)*currentBrightnessRead);
+    lastBrightnessRead = currentBrightnessRead;
+  }
 }
 
 void outputScore() {
