@@ -31,6 +31,9 @@ const int pushPin = 2;
 const int joystickXPin = A4;
 const int joystickYPin = A5;
 const int buzzerPin = 3;
+const int shiftDataPin = 1;
+const int shiftClockPin = 5;
+const int shiftSavePin = 6;
 
 // Config screen
 const uint16_t backgroundColor = ST7735_BLACK;
@@ -72,6 +75,7 @@ unsigned int currentTask = totalNumberOfTasks + 1;
 char *gameOverString = "GAME OVER!\nFinal Score:\n%u";
 char *finalGameOverString = (char *) malloc(sizeof(unsigned int) + sizeof(gameOverString));
 unsigned int score;
+unsigned int prevScore;
 // Quote "Arduino sd card notes": FAT file systems have a limitation when it comes to naming conventions. You must use the 8.3 format, so that file names look like “NAME001.EXT”, where “NAME001” is an 8 character or fewer string, and “EXT” is a 3 character extension. People commonly use the extensions .TXT and .LOG. It is possible to have a shorter file name (for example, mydata.txt, or time.log), but you cannot use longer file names.
 // Took me only one hour to figure that out.
 char *highscoreFileName = "topscore";
@@ -102,6 +106,9 @@ void setup(void) {
   pinMode(pushPin, INPUT);
   pinMode(joystickXPin, INPUT);
   pinMode(TFT_CS, OUTPUT);
+  pinMode(shiftDataPin, OUTPUT);
+  pinMode(shiftClockPin, OUTPUT);
+  pinMode(shiftSavePin, OUTPUT);
 
   randomSeed(analogRead(0));
   tft.initR(INITR_BLACKTAB);
@@ -112,16 +119,19 @@ void setup(void) {
 void resetGame() {
   newTask();
   score = 0;
+  prevScore = 1;
   gameOver = false;
   gameOverLogicComplete = false;
   prevSimonSays = "";
   resetMelody();
+  outputScore();
   initScreen();
 }
 
 void loop() {
   if (!gameOver) {
     gameOver = printCounter() <= 0;
+    prevScore = score;
 
     if (wrongTaskComplete()) {
       gameOver = true;
@@ -141,6 +151,7 @@ void loop() {
       newTask();
     }
 
+    outputScore();
     printCommand();
   }
   else {
@@ -149,10 +160,18 @@ void loop() {
   doSound();
 }
 
+void outputScore() {
+  if (prevScore != score) {
+    digitalWrite(shiftSavePin, LOW);
+    shiftOut(shiftDataPin, shiftClockPin, MSBFIRST, score);
+    digitalWrite(shiftSavePin, HIGH);
+  }
+}
+
 unsigned long timeLastTone = 0;
-int prevScore = 0;
+unsigned int oldScore;
 void doSound() {
-  if (score > prevScore) {
+  if (score > oldScore) {
     if (currentTone < sizeof(melody) / sizeof(int)) {
       if (((unsigned long) millis()) - timeLastTone > noteDelay) {
         tone(buzzerPin, melody[currentTone++], toneLength);
@@ -169,7 +188,7 @@ void resetMelody() {
   noTone(buzzerPin);
   currentTone = 0;
   timeLastTone = 0;
-  prevScore = score;
+  oldScore = score;
 }
 
 char counterBuffer[4];
