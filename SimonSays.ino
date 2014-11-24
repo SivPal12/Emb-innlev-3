@@ -33,7 +33,7 @@ const int joystickYPin = A5;
 const int buzzerPin = 3;
 const int shiftDataPin = 1;
 const int shiftClockPin = 5;
-const int shiftSavePin = 6;
+const int shiftSavePin = 0;
 
 // Config screen
 const uint16_t backgroundColor = ST7735_BLACK;
