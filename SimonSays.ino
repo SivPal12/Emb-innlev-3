@@ -92,6 +92,7 @@ char *simonLies[] = {
   "Simon lies", "", "Simon sleeps", "Simon simon"
 };
 const char *currentSimonSays, *prevSimonSays;
+// Lvl up sound
 int melody[] = {
   NOTE_E3, NOTE_G3, NOTE_E4, NOTE_C4, NOTE_D4, NOTE_G4, NOTE_G4
 };
@@ -134,18 +135,22 @@ void resetGame() {
 
 void loop() {
   if (!gameOver) {
+    // Check if time is up
     gameOver = printCounter() <= 0;
     prevScore = score;
 
+    // Check if any other task is completed
     if (wrongTaskComplete()) {
       gameOver = true;
       return;
     }
+    // Check if no tasks should be completed
     else if (gameOver && !simonSays) {
       gameOver = false;
       score++;
       newTask();
     }
+    // Check current task complete
     else if (taskComplete()) {
       if (!simonSays) {
         gameOver = true;
@@ -155,13 +160,16 @@ void loop() {
       newTask();
     }
 
+    // Update LEDs
     outputScore();
+    // Update screen
     printCommand();
   }
   else {
     doGameOverLogic();
   }
   doSound();
+  // Dimming logic
   int currentBrightnessRead = analogRead(brightnessPin);
   if (abs(lastBrightnessRead - currentBrightnessRead) > 10) {
     analogWrite(backlightPin, (255.0/1023)*currentBrightnessRead);
@@ -169,6 +177,7 @@ void loop() {
   }
 }
 
+// Updates LEDs with current score in binary
 void outputScore() {
   if (prevScore != score) {
     digitalWrite(shiftSavePin, LOW);
@@ -179,6 +188,7 @@ void outputScore() {
 
 unsigned long timeLastTone = 0;
 unsigned int oldScore;
+// Plays lvl up sound if score is increased
 void doSound() {
   if (score > oldScore) {
     if (currentTone < sizeof(melody) / sizeof(int)) {
@@ -245,6 +255,7 @@ void initScreen() {
   tft.setRotation(3);
 }
 
+// Updates simon says
 void printSimonSays() {
   if (currentSimonSays != prevSimonSays) {
     tft.setTextSize(simonSaysTextSize);
@@ -262,6 +273,7 @@ void repaintSimonSays(uint16_t color) {
 }
 
 const char *pPrevCommand;
+// Prints a command to screen if a new command is set.
 void printCommand() {
   printSimonSays();
   if (pPrevCommand != pCurrentCommand) {
@@ -282,7 +294,8 @@ void repaintCommand(uint16_t color) {
 }
 
 /*
- * Inits a new task, changes command on screen and resets command counter
+ * Inits a new task, changes command on screen, resets command counter and
+ * determins if simon lies
  */
 int prevTask;
 void newTask() {
@@ -348,6 +361,7 @@ void playGameOverSound() {
   }
 }
 
+// Loads highscore from SD card
 unsigned int getHighScore() {
   if (!SD.exists(highscoreFileName)) {
     return 0;
@@ -363,6 +377,7 @@ unsigned int getHighScore() {
   return highscore;
 }
 
+// Saves highscore to SD card
 void setHighscore(uint16_t newHighscore) {
   if (SD.exists(highscoreFileName)) {
     SD.remove(highscoreFileName);
@@ -459,6 +474,7 @@ bool isTaskDisabled(int taskNum) {
 }
 
 int prevShake = LOW;
+// Flip it task
 bool tiltComplete() {
   bool result = false;
 
